@@ -34,7 +34,7 @@ describe('Message Bridge', () => {
   it('should publish price changes to the world', (done) => {
     mockQuoteGrabber.setup.start.toDoThis((interval, handler) => {
       setTimeout(() => {
-        handler(['some market value']);
+        handler(null, ['some market value']);
       }, 100);
     });
 
