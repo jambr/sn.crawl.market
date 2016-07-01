@@ -5,7 +5,6 @@ Crawls stock market prices and publishes those events.
 Install the module with: `npm install crawl.market`
 
 ## Messages Published
-  - sn.market.value.create
   - sn.market.value.update
 
 ## Worker Messages Subscribed To

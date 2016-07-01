@@ -5,14 +5,14 @@ let should = require('should');
 let deride = require('deride');
 
 describe('Quote Grabber', () => {
-  let quoteGrabber, store;
+  let quoteGrabber, store, mockBroker, mockFinance;
 
   beforeEach(() => {
     store = new KeyValueStore('sn:crawl:market:symbols');
     store.flush();
-    let mockFinance = deride.stub(['quote']);
+    mockFinance = deride.stub(['quote']);
     mockFinance.setup.quote.toCallbackWith(null, [{}]);
-    quoteGrabber = new QuoteGrabber(store, mockFinance);
+    quoteGrabber = new QuoteGrabber(store, mockFinance, mockBroker);
   });
 
   it('should let me add symbols to watch', (done) => {
@@ -42,9 +42,10 @@ describe('Quote Grabber', () => {
 
   it('should get the quotes on a timer', (done) => {
     quoteGrabber.add('LON', 'VM', () => {
-      quoteGrabber.start(1, (err, prices) => {
+      quoteGrabber.start(100, (err, quotes) => {
         should.ifError(err);
-        prices.length.should.eql(1);
+        quotes.should.eql([{}]);
+        mockFinance.expect.quote.called.once();
         quoteGrabber.stop();
         done();
       });
