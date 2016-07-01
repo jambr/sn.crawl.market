@@ -28,7 +28,5 @@ describe('Google Finance', () => {
 
       done();
     });
-
   });
-
 });
