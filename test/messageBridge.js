@@ -17,9 +17,10 @@ describe('Message Bridge', () => {
   });
 
   it('should subscribe to picker symbol creates and save to the quote grabber', (done) => {
-    mockQuoteGrabber.setup.add.toDoThis((exchange, ticker) => {
+    mockQuoteGrabber.setup.add.toDoThis((exchange, ticker, ack) => {
       should(exchange).eql('LON');
       should(ticker).eql('VM');
+      ack();
       done();
     });
     messageBridge.start(() => {

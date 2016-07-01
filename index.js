@@ -6,7 +6,7 @@ let MessageBridge = require('./lib/messageBridge');
 let QuoteGrabber = require('./lib/quoteGrabber');
 
 let finance = new GoogleFinance();
-let broker = new Broker('stocknet.topic');
+let broker = new Broker('sn:topic');
 let store = new KeyValueStore('sn:crawl:market:symbols');
 let quoteGrabber = new QuoteGrabber(store, finance);
  
