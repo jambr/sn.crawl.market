@@ -3,15 +3,26 @@ let QuoteGrabber = require('../lib/quoteGrabber');
 let KeyValueStore = require('sn.core').Default.Store;
 let should = require('should');
 let deride = require('deride');
+let async = require('async');
 
 describe('Quote Grabber', () => {
-  let quoteGrabber, store, mockBroker, mockFinance;
+  let quoteGrabber, store, mockBroker, mockFinance, sampleQuotes;
 
   beforeEach(() => {
-    store = new KeyValueStore('sn:crawl:market:symbols');
+    store = new KeyValueStore('sn:test:crawl:market:symbols');
     store.flush();
     mockFinance = deride.stub(['quote']);
-    mockFinance.setup.quote.toCallbackWith(null, [{}]);
+    sampleQuotes = [{ 
+      ticker: 'VM', 
+      exchange: 'LON', 
+      price: 'GBX256.70' 
+    },{ 
+      ticker: 'BARC', 
+      exchange: 'LON', 
+      price: 'GBX256.70' 
+    }];
+
+    mockFinance.setup.quote.toCallbackWith(null, sampleQuotes);
     quoteGrabber = new QuoteGrabber(store, mockFinance, mockBroker);
   });
 
@@ -40,16 +51,33 @@ describe('Quote Grabber', () => {
     });
   });
 
-  it('should get the quotes on a timer', (done) => {
-    quoteGrabber.add('LON', 'VM', () => {
-      quoteGrabber.start(100, (err, quotes) => {
-        should.ifError(err);
-        quotes.should.eql([{}]);
-        mockFinance.expect.quote.called.once();
-        quoteGrabber.stop();
-        done();
-      });
-    });
+  it('should get the quotes on a timer', (done) => { 
+    async.series([
+        (next) => { quoteGrabber.add('LON', 'VM', next); },
+        (next) => { quoteGrabber.add('LON', 'BARC', next); },
+        (next) => { 
+          quoteGrabber.start(100, (err, quotes) => {
+            should.ifError(err);
+            mockFinance.expect.quote.called.once();
+            quotes.should.eql(sampleQuotes);
+            quoteGrabber.stop();
+            next();
+          });
+        }], done);
+  });
+
+  it('shouldnt fire the tick handler for stocks that havent changed', (done) => {
+    async.series([
+        (next) => { quoteGrabber.add('LON', 'VM', next); },
+        (next) => { quoteGrabber.add('LON', 'BARC', next); },
+        (next) => { quoteGrabber.grab(() => {
+          sampleQuotes[1].price = 'CHANGED';
+          next();
+        }); },
+        (next) => { quoteGrabber.grab((err, quotes) => {
+          should(quotes.length).eql(1);
+          next();
+        }); }], done);
   });
 
 });
