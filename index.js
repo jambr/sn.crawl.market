@@ -12,6 +12,10 @@ let broker = new Broker('sn:topic', config.rabbitmq);
 let quoteGrabber = new QuoteGrabber(store, finance);
  
 let messageBridge = new MessageBridge(broker, quoteGrabber);
-messageBridge.start(() => {
+messageBridge.start((err) => {
+  if(err) {
+    console.log(err);
+    process.exit(1);
+  }
   console.log('Market watch started...');
 });
